@@ -88,7 +88,6 @@ view(df)
 #                  tuning_frequency = rep(x = NA, times=length(json.file.names)))
 
 
-
 ################################################################################
 # Step 3: Essentia Model Cleanup 
 ################################################################################
@@ -98,10 +97,13 @@ essentiamodeldf <- read_csv(file.path("EssentiaOutput","EssentiaModelOutput.csv"
 View(essentiamodeldf)
 dim(essentiamodeldf)
 
+
 cleaned.essentia.model <- essentiamodeldf |>
   mutate(
+    # Create Two New Columns of means of 3 provided rows
     valence = rowMeans(essentiamodeldf[,c("deam_valence", "emo_valence", "muse_valence")], na.rm = T),
     arousal = rowMeans(essentiamodeldf[,c("deam_arousal", "emo_arousal", "muse_arousal")], na.rm = T),
+    # Discogs-EffNet and MSD-MusiCNN Extractors
     aggressive = rowMeans(essentiamodeldf[,c("eff_aggressive", "nn_aggressive")], na.rm = T),
     happy = rowMeans(essentiamodeldf[,c("eff_happy", "nn_happy")], na.rm = T),
     party = rowMeans(essentiamodeldf[,c("eff_party", "nn_party")], na.rm = T),
@@ -112,6 +114,7 @@ cleaned.essentia.model <- essentiamodeldf |>
     instrumental = rowMeans(essentiamodeldf[,c("eff_instrumental", "nn_instrumental")], na.rm = T)
   ) |>
   rename(timbreBright = eff_timbre_bright) |>
+  # Removed all nonessential columns
   select("artist",
          "album",
          "track",
@@ -127,30 +130,22 @@ cleaned.essentia.model <- essentiamodeldf |>
          "instrumental",
          "timbreBright")
 
-View(cleaned.essentia.model)
+view(cleaned.essentia.model)
 
 ################################################################################
 # Step 4: LIWC Merge
 ################################################################################
 
 # Load csv file
-folder2 = "LIWCOutput"
-LIWCOutputdf <- read.csv(paste(folder2,"LIWCOutput.csv", sep="/"))
+LIWCOutputdf <- read_csv(file.path("LIWCOutput", "LIWCOutput.csv"))
 
-help("merge")
+merge_1 <- left_join(df, cleaned.essentia.model)
 
-merge_1 <- merge(df, cleaned.essentia.model, 
-                 by = intersect(names(df), names(cleaned.essentia.model)), 
-                 all = TRUE)
+final.merge <- left_join(merge_1, LIWCOutputdf)|>
+  rename(funct = "function")
 
-final.merge <- merge(merge_1, LIWCOutputdf, 
-                     by = intersect(names(df), names(cleaned.essentia.model)), 
-                     all = TRUE)
-
-colnames(final.merge)[colnames(final.merge) == "function."] <- "funct"
-
-View(final.merge)
-dim(final.merge)
+view(final.merge)
+dim(final.merge) # matches the original lab 3 dimensions
 
 ################################################################################
 # Step 5: Two new .csv Files
