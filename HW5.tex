@@ -1,0 +1,223 @@
+\documentclass{article}\usepackage[]{graphicx}\usepackage[]{xcolor}
+% maxwidth is the original width if it is less than linewidth
+% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlsng}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hldef}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+\usepackage[margin=1.0in]{geometry} % To set margins
+\usepackage{amsmath}  % This allows me to use the align functionality.
+                      % If you find yourself trying to replicate
+                      % something you found online, ensure you're
+                      % loading the necessary packages!
+\usepackage{amsfonts} % Math font
+\usepackage{fancyvrb}
+\usepackage{hyperref} % For including hyperlinks
+\usepackage[shortlabels]{enumitem}% For enumerated lists with labels specified
+                                  % We had to run tlmgr_install("enumitem") in R
+\usepackage{float}    % For telling R where to put a table/figure
+\usepackage{natbib}        %For the bibliography
+\bibliographystyle{apalike}%For the bibliography
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+\begin{enumerate}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% QUESTION 1
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\item In Lab 3, you wrangled data from Essentia, Essentia models and LIWC. Rework your 
+solution to Lab 3 using \texttt{tidyverse} \citep{tidyverse} instead of base \texttt{R}.
+Specifically, rewrite your code for steps 1-4 of task 2 using \texttt{tidyverse} \citep{tidyverse}. 
+Make sure to address any issues I noted in your code file, and ensure that your code 
+runs in the directory as it is set up.
+\begin{knitrout}\scriptsize
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlcom{################################################################################}
+\hlcom{# 2: Lab Coding Task: Compile Data from Essentia}
+\hlcom{################################################################################}
+
+\hlkwd{library}\hldef{(}\hlsng{"jsonlite"}\hldef{)}
+\hlkwd{help}\hldef{(}\hlsng{"jsonlite"}\hldef{)}
+\hlkwd{library}\hldef{(}\hlsng{"tidyverse"}\hldef{)}
+\hlkwd{help}\hldef{(}\hlsng{"tidyverse"}\hldef{)}
+
+\hlcom{# Step 1 }
+
+\hlcom{# File Name + Extraction }
+\hldef{current.filename} \hlkwb{<-} \hldef{(}\hlsng{"The Front Bottoms-Talon Of The Hawk-Au Revoir (Adios).json"}\hldef{)}
+\hldef{curr.file.parts} \hlkwb{<-} \hlkwd{str_split}\hldef{(current.filename,} \hlsng{"-"}\hldef{,} \hlkwc{simplify} \hldef{=} \hlnum{TRUE}\hldef{)}
+\hldef{curr.artist.file} \hlkwb{<-} \hldef{curr.file.parts[}\hlnum{1}\hldef{]}
+\hldef{curr.album.file} \hlkwb{<-} \hldef{curr.file.parts[}\hlnum{2}\hldef{]}
+\hldef{curr.track.file} \hlkwb{<-} \hldef{curr.file.parts[}\hlnum{3}\hldef{] |>}
+  \hlkwd{str_remove}\hldef{(}\hlsng{".json$"}\hldef{)}
+
+\hlcom{# Load JSON file}
+\hldef{json.storing} \hlkwb{<-} \hlkwd{fromJSON}\hldef{(}\hlkwd{file.path}\hldef{(}\hlsng{"EssentiaOutput"}\hldef{, current.filename))}
+
+\hlcom{# Extract metadata}
+\hldef{overall.loudness} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{loudness_ebu128}\hlopt{$}\hldef{integrated}
+\hldef{spectral.energy} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{spectral_energy}
+\hldef{dissonance} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{dissonance}
+\hldef{pitch.salience} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{pitch_salience}
+\hldef{bpm} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{rhythm}\hlopt{$}\hldef{bpm}
+\hldef{beats.loudness} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{rhythm}\hlopt{$}\hldef{beats_loudness}
+\hldef{danceability} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{rhythm}\hlopt{$}\hldef{danceability}
+\hldef{tuning.frequency} \hlkwb{<-} \hldef{json.storing}\hlopt{$}\hldef{tonal}\hlopt{$}\hldef{tuning_frequency}
+
+
+\hlcom{######## Step 2 #########}
+\hlkwd{help}\hldef{(}\hlsng{"map_dfr"}\hldef{)} \hlcom{# cite purrr package for map_dfr }
+                \hlcom{# documentation says purrr:map functions }
+                \hlcom{# can be thought of as a replacement to for loops}
+
+\hldef{data.extraction} \hlkwb{<-} \hlkwa{function}\hldef{(}\hlkwc{json.file.names}\hldef{)\{}
+    \hldef{df} \hlkwb{<-} \hlkwd{map_dfr}\hldef{(json.file.names,} \hlkwa{function}\hldef{(}\hlkwc{file}\hldef{)\{}
+      \hldef{file.parts} \hlkwb{<-} \hlkwd{str_split}\hldef{(file,} \hlsng{"-"}\hldef{,} \hlkwc{simplify} \hldef{=} \hlnum{TRUE}\hldef{)}
+      \hldef{artist} \hlkwb{<-} \hldef{file.parts[}\hlnum{1}\hldef{]}
+      \hldef{album} \hlkwb{<-} \hldef{file.parts[}\hlnum{2}\hldef{]}
+      \hldef{track} \hlkwb{<-} \hldef{file.parts[}\hlnum{3}\hldef{]|>}
+        \hlkwd{str_remove}\hldef{(}\hlsng{".json$"}\hldef{)}
+
+    \hldef{json.storage} \hlkwb{<-} \hlkwd{fromJSON}\hldef{(}\hlkwd{file.path}\hldef{(}\hlsng{"EssentiaOutput"}\hldef{, current.filename))}
+
+    \hlkwd{tibble}\hldef{(}
+      \hlkwc{artist} \hldef{= artist,}
+      \hlkwc{album} \hldef{= album,}
+      \hlkwc{track} \hldef{= track,}
+      \hlkwc{overall_loudness} \hldef{= json.storage}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{loudness_ebu128}\hlopt{$}\hldef{integrated,}
+      \hlkwc{spectral_energy} \hldef{= json.storage}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{spectral_energy,}
+      \hlkwc{dissonance} \hldef{= json.storage}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{dissonance,}
+      \hlkwc{pitch_salience} \hldef{= json.storage}\hlopt{$}\hldef{lowlevel}\hlopt{$}\hldef{pitch_salience,}
+      \hlkwc{bpm} \hldef{= json.storage}\hlopt{$}\hldef{rhythm}\hlopt{$}\hldef{bpm,}
+      \hlkwc{beats_loudness} \hldef{= json.storage}\hlopt{$}\hldef{rhythm}\hlopt{$}\hldef{beats_loudness,}
+      \hlkwc{danceability} \hldef{= json.storage}\hlopt{$}\hldef{rhythm}\hlopt{$}\hldef{danceability,}
+      \hlkwc{tuning_frequency} \hldef{= json.storage}\hlopt{$}\hldef{tonal}\hlopt{$}\hldef{tuning_frequency}
+    \hldef{)}
+
+  \hldef{\})}
+  \hlkwd{return}\hldef{(df)}
+\hldef{\}}
+
+\hlcom{# List of .json files}
+\hldef{json.file.names} \hlkwb{<-} \hlkwd{list.files}\hldef{(}\hlsng{"EssentiaOutput"}\hldef{,} \hlkwc{pattern} \hldef{=} \hlsng{"\textbackslash{}\textbackslash{}.json$"}\hldef{)}
+\hldef{df} \hlkwb{<-} \hlkwd{data.extraction}\hldef{(json.file.names)}
+\hlkwd{view}\hldef{(df)}
+
+\hlcom{################################################################################}
+\hlcom{# Step 3: Essentia Model Cleanup }
+\hlcom{################################################################################}
+
+\hlcom{# Load csv file}
+\hldef{essentiamodeldf} \hlkwb{<-} \hlkwd{read_csv}\hldef{(}\hlkwd{file.path}\hldef{(}\hlsng{"EssentiaOutput"}\hldef{,}\hlsng{"EssentiaModelOutput.csv"}\hldef{))}
+\hlcom{#View(essentiamodeldf)}
+\hlkwd{dim}\hldef{(essentiamodeldf)}
+\end{alltt}
+\begin{verbatim}
+## [1] 181  49
+\end{verbatim}
+\begin{alltt}
+\hldef{cleaned.essentia.model} \hlkwb{<-} \hldef{essentiamodeldf |>}
+  \hlkwd{mutate}\hldef{(}
+    \hlcom{# Create Two New Columns of means of 3 provided rows}
+    \hlkwc{valence} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"deam_valence"}\hldef{,} \hlsng{"emo_valence"}\hldef{,} \hlsng{"muse_valence"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{arousal} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"deam_arousal"}\hldef{,} \hlsng{"emo_arousal"}\hldef{,} \hlsng{"muse_arousal"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlcom{# Discogs-EffNet and MSD-MusiCNN Extractors}
+    \hlkwc{aggressive} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_aggressive"}\hldef{,} \hlsng{"nn_aggressive"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{happy} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_happy"}\hldef{,} \hlsng{"nn_happy"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{party} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_party"}\hldef{,} \hlsng{"nn_party"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{relax} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_relax"}\hldef{,} \hlsng{"nn_relax"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{sad} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_sad"}\hldef{,} \hlsng{"nn_sad"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{acoustic} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_acoustic"}\hldef{,} \hlsng{"nn_acoustic"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{electronic} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_electronic"}\hldef{,} \hlsng{"nn_electronic"}\hldef{)],} \hlkwc{na.rm} \hldef{= T),}
+    \hlkwc{instrumental} \hldef{=} \hlkwd{rowMeans}\hldef{(essentiamodeldf[,}\hlkwd{c}\hldef{(}\hlsng{"eff_instrumental"}\hldef{,} \hlsng{"nn_instrumental"}\hldef{)],} \hlkwc{na.rm} \hldef{= T)}
+  \hldef{) |>}
+  \hlkwd{rename}\hldef{(}\hlkwc{timbreBright} \hldef{= eff_timbre_bright) |>}
+  \hlcom{# Removed all nonessential columns}
+  \hlkwd{select}\hldef{(}\hlsng{"artist"}\hldef{,}
+         \hlsng{"album"}\hldef{,}
+         \hlsng{"track"}\hldef{,}
+         \hlsng{"valence"}\hldef{,}
+         \hlsng{"arousal"}\hldef{,}
+         \hlsng{"aggressive"}\hldef{,}
+         \hlsng{"happy"}\hldef{,}
+         \hlsng{"party"}\hldef{,}
+         \hlsng{"relax"}\hldef{,}
+         \hlsng{"sad"}\hldef{,}
+         \hlsng{"acoustic"}\hldef{,}
+         \hlsng{"electronic"}\hldef{,}
+         \hlsng{"instrumental"}\hldef{,}
+         \hlsng{"timbreBright"}\hldef{)}
+
+\hlkwd{view}\hldef{(cleaned.essentia.model)}
+
+\hlcom{################################################################################}
+\hlcom{# Step 4: LIWC Merge}
+\hlcom{################################################################################}
+
+\hlcom{# Load csv file}
+\hldef{LIWCOutputdf} \hlkwb{<-} \hlkwd{read_csv}\hldef{(}\hlkwd{file.path}\hldef{(}\hlsng{"LIWCOutput"}\hldef{,} \hlsng{"LIWCOutput.csv"}\hldef{))}
+
+\hldef{final.merge} \hlkwb{<-} \hldef{df |>}
+  \hlkwd{left_join}\hldef{(cleaned.essentia.model)|>}
+  \hlkwd{left_join}\hldef{(LIWCOutputdf)|>}
+  \hlkwd{rename}\hldef{(}\hlkwc{funct} \hldef{=} \hlsng{"function"}\hldef{)}
+
+\hlkwd{dim}\hldef{(final.merge)} \hlcom{# matches the original lab 3 dimensions}
+\end{alltt}
+\begin{verbatim}
+## [1] 181 140
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+To change my lab 3 to use the \texttt{tidyverse} package \citep{tidyverse}, I started with step 1 by creating a function that made it easier to input all of the \texttt{.json} files. Functions are good to use as they can be tested instead of running it more manually to make sure there are no errors. I thought this was a good way to incorporate the use of functions as practice as well as practicality. I also found the function \texttt{map\_dfr()} which is part of the \texttt{purr} package \citep{WickhamHenry} within \texttt{tidyverse} \citep{tidyverse}. The documentation from the \texttt{tidyverse} \citep{tidyverse} website said that purrr:map functions can be thought of as a replacement to for loops. The \texttt{map\_dfr()} returns data frames (or tibbles) by row-binding the outputs together. It is designed to iterate over elements which is a sufficient replacement for the \texttt{for()} loop in the previous lab with base \texttt{R}. I also used \texttt{str\_remove()}  \citep{Wickham} which removes the \texttt{.json} at the end of the file name. I then created a tibble for each \texttt{.json} file instead of creating an empty data frame. The \texttt{map\_dfr()} binds the tibble together to create the neat final tibble. For step 3, I used the function \texttt{mutate()} which allows for the code to be readable and concise. The pipe throughout this step allows for me to not have to redefine what I am manipulating since I am changing multiple parts of one tibble. Lastly for step 4, I used \texttt{left\_join()}. This automatically removes the repeated columns in the different tibbles I am combining. I cross checked the final dimensions of my final merged tibble and the one from last lab finding that they were equivalent: 181 rows and 140 columns. 
+
+\end{enumerate}
+\bibliography{bibliography}
+\end{document}

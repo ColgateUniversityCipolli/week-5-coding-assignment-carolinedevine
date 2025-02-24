@@ -1,6 +1,6 @@
 
 ################################################################################
-# Lab 3
+# Homework 5: Changing Lab 3 to use tidyverse
 # Caroline Devine
 ################################################################################
 
@@ -11,9 +11,9 @@
 
 library("jsonlite")
 help("jsonlite")
-
 library("tidyverse")
 help("tidyverse")
+
 # Step 1 
 
 # File Name + Extraction 
@@ -42,12 +42,12 @@ tuning.frequency <- json.storing$tonal$tuning_frequency
 help("map_dfr") # cite purrr package for map_dfr --> documentation says purrr:map functions can be thought of as a replacement to for loops
 
 data.extraction <- function(json.file.names){
-  df <- map_dfr(json.file.names, function(file){
-    file.parts <- str_split(file, "-", simplify = TRUE)
-    artist <- file.parts[1]
-    album <- file.parts[2]
-    track <- file.parts[3]|>
-      str_remove(".json$")
+    df <- map_dfr(json.file.names, function(file){
+      file.parts <- str_split(file, "-", simplify = TRUE)
+      artist <- file.parts[1]
+      album <- file.parts[2]
+      track <- file.parts[3]|>
+        str_remove(".json$")
     
     json.storage <- fromJSON(file.path("EssentiaOutput", current.filename))
     
@@ -73,20 +73,6 @@ data.extraction <- function(json.file.names){
 json.file.names <- list.files("EssentiaOutput", pattern = "\\.json$")
 df <- data.extraction(json.file.names)
 view(df)
-
-# Create Empty Data Frame with 10 given columns
-# df <- data.frame(artist = rep(x = NA, times=length(json.file.names)), 
-#                  album = rep(x = NA, times=length(json.file.names)), 
-#                  track = rep(x = NA, times=length(json.file.names)), 
-#                  overall_loudness = rep(x = NA, times=length(json.file.names)), 
-#                  spectral_energy = rep(x = NA, times=length(json.file.names)), 
-#                  dissonance = rep(x = NA, times=length(json.file.names)), 
-#                  pitch_salience = rep(x = NA, times=length(json.file.names)), 
-#                  bpm = rep(x = NA, times=length(json.file.names)), 
-#                  beats_loudness = rep(x = NA, times=length(json.file.names)),
-#                  danceability = rep(x = NA, times=length(json.file.names)),
-#                  tuning_frequency = rep(x = NA, times=length(json.file.names)))
-
 
 ################################################################################
 # Step 3: Essentia Model Cleanup 
@@ -139,45 +125,10 @@ view(cleaned.essentia.model)
 # Load csv file
 LIWCOutputdf <- read_csv(file.path("LIWCOutput", "LIWCOutput.csv"))
 
-merge_1 <- left_join(df, cleaned.essentia.model)
-
-final.merge <- left_join(merge_1, LIWCOutputdf)|>
+final.merge <- df |>
+  left_join(cleaned.essentia.model)|>
+  left_join(LIWCOutputdf)|>
   rename(funct = "function")
 
 view(final.merge)
 dim(final.merge) # matches the original lab 3 dimensions
-
-################################################################################
-# Step 5: Two new .csv Files
-################################################################################
-
-allentown.index <- which(final.merge$track == "Allentown")
-trainingdata <- final.merge[-c(120), ]
-write.csv(trainingdata,"trainingdata.csv")
-
-testingdata <- final.merge[c(120), ]
-write.csv(testingdata, "testingdata.csv")
-View(final.merge)
-
-################################################################################
-# Part 3: Challenge
-################################################################################
-
-help("boxplot")
-valence.plot <- boxplot(valence ~ artist, data = final.merge, na.action = NULL, 
-                        xlab = "Artist", ylab = "Valence")
-arousal.plot <- boxplot(arousal ~ artist, data = final.merge, na.action = NULL, 
-                        xlab = "Artist", ylab = "Arousal")
-bpm.plot <- boxplot(bpm ~ artist, data = final.merge, na.action = NULL, 
-                    xlab = "Artist", ylab = "BPM")
-
-## This is my attempt to create box plots for certain characteristics of 
-## each of the artists. I am unsure exactly how these maybe helpful in 
-## understanding the overall question of which band had a bigger impact 
-## on AllenTown as these plots look at the valence, arousal, and bpm and how 
-## they vary per artist; they do not look directly at AllenTown.
-
-allentown <- final.merge[final.merge$track == "Allentown"]
-View(allentown)
-
-## I plan on using the training and testing data to figure this out. 
